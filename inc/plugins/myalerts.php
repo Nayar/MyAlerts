@@ -564,11 +564,10 @@ function myalerts_global()
 			$lang->load('myalerts');
 		}
 
-		$userSettings = array();
 		$queryString = "SELECT * FROM %salert_settings s LEFT JOIN %salert_setting_values v ON (s.id = v.setting_id) WHERE v.user_id = ".(int) $mybb->user['uid'];
 		$query = $db->write_query(sprintf($queryString, TABLE_PREFIX, TABLE_PREFIX));
 		while ($row = $db->fetch_array($query)) {
-			$mybb->user['myalerts_settings'][$row['code']] = (int) $row['value'];
+			$mybb->user['disabled_alerts'][] = (string) $row['code'];
 		}
 
 		$mybb->user['unreadAlerts'] = 0;
@@ -633,12 +632,10 @@ function myalerts_addAlert_rep()
 {
 	global $mybb, $db, $Alerts, $reputation;
 
-	$queryString = "SELECT s.*, v.*, u.uid FROM %salert_settings s LEFT JOIN %salert_setting_values v ON (v.setting_id = s.id) LEFT JOIN %susers u ON (v.user_id = u.uid) WHERE u.uid = ". (int) $reputation['uid'] ." AND s.code = 'rep' LIMIT 1";
+	$queryString = "SELECT s.code, v.*, u.uid FROM %salert_settings s LEFT JOIN %salert_setting_values v ON (v.setting_id = s.id) LEFT JOIN %susers u ON (v.user_id = u.uid) WHERE u.uid = ". (int) $reputation['uid'] ." AND s.code = 'rep' LIMIT 1";
 	$query = $db->write_query(sprintf($queryString, TABLE_PREFIX, TABLE_PREFIX, TABLE_PREFIX));
 
-	$userSetting = $db->fetch_array($query);
-
-	if ((int) $userSetting['value'] == 1) {
+	if ($db->num_rows($query) == 0) {
 		$Alerts->addAlert($reputation['uid'], 'rep', 0, $mybb->user['uid'], array());
 	}
 }
